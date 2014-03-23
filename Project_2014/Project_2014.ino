@@ -16,6 +16,7 @@ int ultin=5;
 int ultout=6;
 unsigned long duration;
 int val=0;
+int a;
 
 void setup(){
   
