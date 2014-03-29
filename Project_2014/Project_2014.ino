@@ -9,6 +9,7 @@ By: Ashton Gobbo
 // KULANI's code:
 
 //suggestions for the ultrasonic sensor code:
+//This code reduces the number of swerves the robot does when following the wall
 
 const int ci_Ultrasonic_Ping = 5;   //input plug
 const int ci_Ultrasonic_Data = 6;   //output plug
