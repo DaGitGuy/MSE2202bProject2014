@@ -9,38 +9,95 @@ By: Ashton Gobbo
 //ASHTON'S code
 
 
-#include <Servo.h>
-Servo rightmotor;
-Servo leftmotor;
-int ultin=5;
-int ultout=6;
-unsigned long duration;
-int val=0;
-int a;
+#include<Servo.h>
+Servo armmotor;
+Servo gripmotor;
+int pos=0;
 
-void setup(){
+void setup()
+{
+  pinMode(9,OUTPUT);
+  gripmotor.attach(9);
+  gripmotor.write(0);
+  pinMode(7,OUTPUT);
+  armmotor.attach(7);
   
   Serial.begin(9600);
-  pinMode(8,OUTPUT);
-  pinMode(9,OUTPUT);
-  rightmotor.attach(8);
-  leftmotor.attach(9);
-  pinMode(5,OUTPUT);
-  pinMode(6,INPUT);
+}
+
+void loop()
+{
+  Serial.println(analogRead(A4));
+  delay(500);
+ 
+  
+  
+  
+  if (analogRead(A4)<15)
+  {
+  armforward();
+  delay(500);
+
+  for(pos = 0; pos < 60; pos += 5)  // goes from 0 degrees to 180 degrees 
+  {                                  // in steps of 1 degree 
+    gripmotor.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(35);                       // waits 15ms for the servo to reach the position 
+  }
+  delay(2000);
+  armforward();
+  delay(2000);
+  
+ 
+  for(pos = 30 ; pos>=(-40); pos-=5)     // goes from 180 degrees to 0 degrees 
+  {                                
+    gripmotor.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(35);                       // waits 15ms for the servo to reach the position 
+  } 
+
+  
+  
+  
+ 
+  
+  
+  armreverse();
+  
+  delay(500);
+  }
+}
+
+
+void armreverse()
+{ 
+  double time=millis();
+  while(1)
+  {
+    armmotor.writeMicroseconds(1900);
+    if (millis()-time >2000)
+    {
+      armmotor.writeMicroseconds(1500);
+      break;
+    }
+  }
+}
+void armforward()
+{ 
+  double time=millis();
+  while(1)
+  {
+    armmotor.writeMicroseconds(1100);
+    if (millis()-time >1000)
+    {
+      armmotor.writeMicroseconds(1500);
+      break;
+    }
+  }
   
 }
 
-void loop(){
+
+
   
-  val= analogRead(A4);
-  Serial.print(val);
-  Serial.print(" . ");
-  //rightmotor.writeMicroseconds(2000);
-  //leftmotor.writeMicroseconds(2050);
-  //Serial.print(Ping()/58);
-  //Serial.print(" . ");
-  delay (500);
-}
 double Ping()
 {
   //Ping Ultrasonic
