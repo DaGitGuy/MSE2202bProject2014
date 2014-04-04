@@ -13,6 +13,9 @@ By: Ashton Gobbo
 Servo armmotor;
 Servo gripmotor;
 int pos=0;
+int incoming = 0; //KULANI
+int val = 0; //KULANI 
+int topindex = 0; //KULANI
 
 void setup()
 {
@@ -24,23 +27,31 @@ void setup()
   
   Serial.begin(9600);
 }
-
 void loop()
 {
+  topindex=0;
+ switch (topindex)                    //KULANI
+ {                                    // "
+  case 0:                             // "
+  {                                   // "
+    incoming = Serial.available();    // " 
+         // "
+    val = Serial.parseInt();          // "
+                                      // "
+    topindex = val;                                 // "
+   break;                             // "
+  }                                   // "
+  
+  case 2: //KULANI
+ { 
+  // Pick-Up
   //Serial.println(analogRead(A4));
   //delay(500);
-  Serial.println(analogRead(A5));
-  delay(500); 
- 
   
-
-  
-  if (analogRead(A4)<15)
-  {
+  //if (Serial.available()==1)
   armforward();
   delay(500);
-
-  for(pos = 0; pos < 60; pos += 5)  // goes from 0 degrees to 180 degrees 
+  for(pos = 0; pos < 55; pos += 5)  // goes from 0 degrees to 180 degrees 
   {                                  // in steps of 1 degree 
     gripmotor.write(pos);              // tell servo to go to position in variable 'pos' 
     delay(35);                       // waits 15ms for the servo to reach the position 
@@ -50,21 +61,25 @@ void loop()
   delay(2000);
   
  
-  for(pos = 30 ; pos>=(-40); pos-=5)     // goes from 180 degrees to 0 degrees 
+  for(pos = 55 ; pos>=(0); pos-=5)     // goes from 180 degrees to 0 degrees 
   {                                
     gripmotor.write(pos);              // tell servo to go to position in variable 'pos' 
     delay(35);                       // waits 15ms for the servo to reach the position 
   } 
-
-  
   
   armreverse();
-  
   delay(500);
-  }
+  val = 0; //KULANI reset
+  Serial.println(0);
+  break; //KULANI 
+ }
+ 
+ case 1:
+ { //drop off
+ 
+ 
+ 
   
- if (analogRead(A3)<15)
-  {
      armforward();
      armforward();
      delay(500);
@@ -88,12 +103,36 @@ void loop()
         
   
         delay(500);
-    
-  }
+    Serial.println(0);
   
-  
+  break;
+ }
+ 
+ case 3:
+ {
+   int leftbar;
+   int rightbar;
+   int room=0;
+   leftbar= analogRead(A1);
+   rightbar= analogRead(A2);
+    if (leftbar<= 38 && rightbar<= 38){
+          room=1;
+    }
+    if (leftbar<= 38 && rightbar>= 650){
+          room=2;
+    }
+     if (leftbar>= 650 && rightbar<= 38){
+          room=3;
+    }
+   Serial.println(room);
+  break; 
+ }
+ 
+ 
+ 
+ 
 }
-
+}
 
 void armreverse()
 { 
@@ -111,16 +150,28 @@ void armreverse()
 void armforward()
 { 
   double time=millis();
-  while(1)
+  while( 1)
   {
     armmotor.writeMicroseconds(1100);
-    if (millis()-time >1000)
+    if (millis()-time >700)
     {
       armmotor.writeMicroseconds(1500);
       break;
     }
   }
-  
+}
+void armdropoff()
+{
+  double time= millis();
+  while(1)
+  {
+    armmotor.writeMicroseconds(1100);
+    if (millis()-time>2000)
+    {
+      armmotor.writeMicroseconds(1500);
+      break;
+    }
+  }
 }
 
 
