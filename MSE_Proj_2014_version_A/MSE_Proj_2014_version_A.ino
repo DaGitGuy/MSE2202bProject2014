@@ -1,6 +1,7 @@
 /*
 
- MSE 2202 Lab 4
+Alternative code for linetracking. use analog inputs from the ultra sonic sensors as an error
+ MSE 2202 Project work
  Language: Arduino
  Authors: Michael Naish and Eugen Porter
  Date: 14/02/04
@@ -26,18 +27,27 @@ Servo servo_GripMotor;
 //#define DEBUG_MOTORS
 //#define DEBUG_LINE_TRACKERS
 //#define DEBUG_ENCODERS
-//#define DEBUG_ULTRASONIC
+#define DEBUG_ULTRASONIC
 //#define DEBUG_LINE_TRACKER_CALIBRATION
 //#define DEBUG_MOTOR_CALIBRATION
 //#define DEBUG_ARM
 
 boolean bt_Motors_Enabled = true;
 int robotindex = 0; //state of robot at a particular task!
+boolean turn = false; // turn indicator. robot turns when the value is set to true;
+boolean nullencoders = false;
+
+//wallvalues
+long owallvalue = 0;
+long nwallvalue = 0;
 
 //port pin constants
 const int ci_encoder_Pin_A[2] = {
   2,3};
 int x = 0; //detect the door 3100
+long ndistance = 0; //new distance from wall
+long odistance = 0; //old distance from wall
+long deltadistance = 0;//chance in distance from wall
 int ci_encoder_last[2] = {LOW, LOW};
 const int ci_Ultrasonic_Ping = 5;   //input plug
 const int ci_Ultrasonic_Data = 6;   //output plug
@@ -160,6 +170,7 @@ void setup() {
   Serial.begin(9600);
 
   CharliePlexM::setBtn(ci_Charlieplex_LED1,ci_Charlieplex_LED2,ci_Charlieplex_LED3,ci_Charlieplex_LED4,ci_Mode_Button);
+  CharliePlexM::setEncoders(3,2);
 
   // set up ultrasonic
   pinMode(ci_Ultrasonic_Ping, OUTPUT);
@@ -265,88 +276,77 @@ switch (robotindex)
           //servo_RightMotor.writeMicroseconds(1873);
         }
           
-         
+                     
+
      //if((ul_encoder_Count[0] < 100)&&(ul_encoder_Count[1] < 100))
      if(analogRead(ci_Light_Sensor) > 40)
         {
-        if(ul_Echo_Time < 530)
-        {
-          servo_LeftMotor.writeMicroseconds(1800);
-          servo_RightMotor.writeMicroseconds(1740);
-        }
-        
-        else if(ul_Echo_Time > 550)
-        {
-          servo_LeftMotor.writeMicroseconds(1750);
-          servo_RightMotor.writeMicroseconds(1765);
-        }
-        
-        /*else{
-          servo_LeftMotor.writeMicroseconds(1900);
-          servo_RightMotor.writeMicroseconds(1873);
-        }*/
-        
-         /*for(int i=0; i < ci_Num_Encoders; i++)
-          {
-            Serial.print("Encoder ");
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.println(ul_encoder_Count[i], DEC);
-          }*/
-        
-        /*else if((millis() - ul_Calibration_Time) > ci_Motor_Calibration_Time)
-        {
-          servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop); 
-          servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop); 
-
-          ul_encoder_Pos[0] = ul_encoder_Count[0];
-          ul_encoder_Pos[1] = ul_encoder_Count[1];
-#ifdef DEBUG_ENCODERS           
-          for(int i=0; i < ci_Num_Encoders; i++)
-          {
-            Serial.print("Encoder ");
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.println(ul_encoder_Pos[i], DEC);
+       /*Serial.print("Encoder 1 =  ");
+      Serial.println(CharliePlexM::ul_LeftEncoder_Count);
+      Serial.print("Encoder 2 =  ");
+      Serial.println(CharliePlexM::ul_RightEncoder_Count);*/
+         
+          //if(ul_Echo_Time > 650)
+          //{
+             /*servo_LeftMotor.writeMicroseconds(1800 + (680 - ul_Echo_Time));
+         servo_RightMotor.writeMicroseconds(1800 - (680 - ul_Echo_Time));
           }
-#endif
-          if(ul_encoder_Count[1] > ul_encoder_Count[0])
-          {
-            ui_Right_Motor_Offset = 0;
-            ui_Left_Motor_Offset = (ul_encoder_Count[1] - ul_encoder_Count[0]);  // May have to update this if different calibration time is used
+          else{*/
+         //servo_LeftMotor.writeMicroseconds(1800 + (470 - ul_Echo_Time) + deltadistance);
+         //servo_RightMotor.writeMicroseconds(1800 - (470 - ul_Echo_Time) + deltadistance);
+          //}
+          //Serial.println("Hey");
+          //check sudden drop in distance from wall
+          if(ul_Echo_Time != 0){
+            ndistance = ul_Echo_Time;
           }
-          else
-          {
-            ui_Right_Motor_Offset = (ul_encoder_Count[0] - ul_encoder_Count[1]); // May have to update this if different calibration time is used
-            ui_Left_Motor_Offset = 0; 
-          }
-#ifdef DEBUG_MOTOR_CALIBRATION
-          Serial.print("Motor Offsets: Right = ");
-          Serial.print(ui_Right_Motor_Offset);
-          Serial.print(", Left = ");
-          Serial.println(ui_Left_Motor_Offset);
-#endif
-
-          EEPROM.write(ci_Right_Motor_Offset_Address_L, lowByte(ui_Right_Motor_Offset));
-          EEPROM.write(ci_Right_Motor_Offset_Address_H, highByte(ui_Right_Motor_Offset));
-          EEPROM.write(ci_Left_Motor_Offset_Address_L, lowByte(ui_Left_Motor_Offset));
-          EEPROM.write(ci_Left_Motor_Offset_Address_H, highByte(ui_Left_Motor_Offset));
-
-          ui_Robot_State_Index = 0;    // go back to Mode 0 
-        }*/
-        ui_Mode_Indicator_Index = 4;
-        
-       /* ul_encoder_Pos[0] = ul_encoder_Count[0];
-        ul_encoder_Pos[1] = ul_encoder_Count[1];
           
-         for(int i=0; i < ci_Num_Encoders; i++)
-          {
-            Serial.print("Encoder ");
-            Serial.print(i);
-            Serial.print(": ");
-            //Serial.println(digitalRead(ci_encoder_Pin_A[i]), DEC);
-            Serial.println(ul_encoder_Count[i], DEC);
-          }*/
+          
+          
+          if((millis() - ul_Calibration_Time) > 500){
+            Ping(); 
+            ul_Calibration_Time = millis();
+            
+            if(odistance != 0){
+              if(ndistance - odistance > 100)
+              {
+               deltadistance = 690 - 460;
+               
+               
+                //deltadistance = ndistance - odistance;                
+              }
+              
+              if(odistance - ndistance > 100)
+              {
+               deltadistance = 0;
+              if(turn == true){
+                 servo_LeftMotor.writeMicroseconds(1500);
+                 servo_RightMotor.writeMicroseconds(1500);                 
+                 delay(1000); 
+                 
+                 CharliePlexM::ul_LeftEncoder_Count = 0;
+                 CharliePlexM::ul_RightEncoder_Count = 0; 
+                 robotindex = 1;
+                 turn = false;                 
+               }  
+               
+              }               
+            }       
+                      
+            odistance = ndistance;           
+            //Serial.println(ul_Calibration_Time);
+           //Serial.println(ndistance);
+            //Serial.println(ul_Echo_Time, DEC);
+          //Serial.println(deltadistance);
+         
+           // Serial.println(1);
+            
+            
+          }
+          
+          servo_LeftMotor.writeMicroseconds(1800 + 0.5*((460 - ul_Echo_Time) + deltadistance));
+         servo_RightMotor.writeMicroseconds(1800 - 0.5*((460 - ul_Echo_Time) + deltadistance));
+        // Serial.println(1800 - (470 - ul_Echo_Time) + deltadistance);
         }
         
         else
@@ -354,7 +354,7 @@ switch (robotindex)
           servo_LeftMotor.writeMicroseconds(1500);
           servo_RightMotor.writeMicroseconds(1500);
           delay(5000);
-          robotindex = 1;
+          robotindex = 2;
         }
  
     
@@ -378,42 +378,87 @@ switch (robotindex)
   
   case 1:
   {
+    //Robot Turn Case
     //Serial.println("Jesus");
     // Turn left!!
-    if(ul_Echo_Time < 480)
-        {
-          servo_LeftMotor.writeMicroseconds(1820);
-          servo_RightMotor.writeMicroseconds(1700);
-          if(x == 1){
-          servo_LeftMotor.writeMicroseconds(1750);
-          servo_RightMotor.writeMicroseconds(1750);
-          delay(2200);
-          servo_LeftMotor.writeMicroseconds(2000);
-          servo_RightMotor.writeMicroseconds(1500);
-         delay(4000);
-          servo_LeftMotor.writeMicroseconds(1900);
-          servo_RightMotor.writeMicroseconds(1873);
-          delay(4000);
-          x = 0;
-          robotindex = 0;
-            
-          }
-        }
+    Serial.print("Encoder 1 =  ");
+      Serial.println(CharliePlexM::ul_LeftEncoder_Count);
+      Serial.print("Encoder 2 =  ");
+      Serial.println(CharliePlexM::ul_RightEncoder_Count);
+    
+    if(!nullencoders){
+      CharliePlexM::ul_LeftEncoder_Count = 0;
+      CharliePlexM::ul_RightEncoder_Count = 0; 
+      nullencoders = true;
+    }
+    
+     if(CharliePlexM::ul_LeftEncoder_Count < 410){      
+       servo_LeftMotor.writeMicroseconds(1900);
+       servo_RightMotor.writeMicroseconds(1500);
+       
+     }
+      else{
         
-        else if(ul_Echo_Time > 520)
-        {
-          servo_LeftMotor.writeMicroseconds(1750);
-          servo_RightMotor.writeMicroseconds(1750);
-        }
-        
-        if(ul_Echo_Time > 750){
-         //Serial.println("Jesus");
-         x = 1;        
-        }
-        
+        servo_LeftMotor.writeMicroseconds(1500);
+        servo_RightMotor.writeMicroseconds(1500);
+        (1000);
+        robotindex = 3;
+        //CharliePlexM::ul_LeftEncoder_Count = 0;
+        //CharliePlexM::ul_RightEncoder_Count = 0;
+       // nullencoders = false;          
+     
+      }   
           
            break;   
-        }
+     }
+     
+     case 2:
+     {
+       turn = true;
+       robotindex = 0;
+       
+       
+       break;
+     }
+     
+     case 3:
+     {
+       servo_LeftMotor.writeMicroseconds(1900);
+       servo_RightMotor.writeMicroseconds(1873);        
+       delay(5000);
+       //setencoders to zero
+       CharliePlexM::ul_RightEncoder_Count = 0;
+       CharliePlexM::ul_RightEncoder_Count = 0;
+       
+       //turn left towards the wall for a while
+       while(CharliePlexM::ul_RightEncoder_Count < 100){
+         servo_LeftMotor.writeMicroseconds(1700);
+       servo_RightMotor.writeMicroseconds(1800);          
+       }
+       
+       // turn away from the wall until you are 90 degrees
+       do{
+         if(ul_Echo_Time != 0){
+            nwallvalue = ul_Echo_Time;
+          }
+          
+         if((millis() - ul_Calibration_Time) > 100){           
+           ul_Calibration_Time = millis();          
+         servo_LeftMotor.writeMicroseconds(1800);
+         servo_RightMotor.writeMicroseconds(1700);
+                 
+         }
+         owallvalue = nwallvalue;
+       }while(nwallvalue>owallvalue);
+       
+       nwallvalue = 0;
+       0wallvalue = nwallvalue;
+       
+       robotindex = 0;
+       
+       break;
+       
+     }
     
 
   }
