@@ -32,10 +32,12 @@ Servo servo_GripMotor;
 //#define DEBUG_ARM
 
 boolean bt_Motors_Enabled = true;
+int robotindex = 0; //state of robot at a particular task!
 
 //port pin constants
 const int ci_encoder_Pin_A[2] = {
   2,3};
+int x = 0; //detect the door 3100
 int ci_encoder_last[2] = {LOW, LOW};
 const int ci_Ultrasonic_Ping = 5;   //input plug
 const int ci_Ultrasonic_Data = 6;   //output plug
@@ -240,6 +242,10 @@ void loop()
 
 
 
+switch (robotindex)
+{
+  case 0:
+  {
 //start calibration
       if(bt_3_S_Time_Up)
       {
@@ -260,24 +266,25 @@ void loop()
         }
           
          
-     if((ul_encoder_Count[0] < 500)&&(ul_encoder_Count[1] < 500))
+     //if((ul_encoder_Count[0] < 100)&&(ul_encoder_Count[1] < 100))
+     if(analogRead(ci_Light_Sensor) > 40)
         {
-        if(ul_Echo_Time < 570)
+        if(ul_Echo_Time < 530)
         {
-          servo_LeftMotor.writeMicroseconds(1820);
-          servo_RightMotor.writeMicroseconds(1700);
+          servo_LeftMotor.writeMicroseconds(1800);
+          servo_RightMotor.writeMicroseconds(1740);
         }
         
-        else if(ul_Echo_Time > 630)
+        else if(ul_Echo_Time > 550)
         {
           servo_LeftMotor.writeMicroseconds(1750);
-          servo_RightMotor.writeMicroseconds(1750);
+          servo_RightMotor.writeMicroseconds(1765);
         }
         
-        else{
+        /*else{
           servo_LeftMotor.writeMicroseconds(1900);
           servo_RightMotor.writeMicroseconds(1873);
-        }
+        }*/
         
          /*for(int i=0; i < ci_Num_Encoders; i++)
           {
@@ -346,8 +353,11 @@ void loop()
         {
           servo_LeftMotor.writeMicroseconds(1500);
           servo_RightMotor.writeMicroseconds(1500);
+          delay(5000);
+          robotindex = 1;
         }
-  
+ 
+    
 //end of calibration
   if((millis() - ul_Display_Time) > ci_Display_Time)
   {
@@ -363,8 +373,52 @@ void loop()
     Indicator();
   }
 } 
+ break;
+  }
+  
+  case 1:
+  {
+    //Serial.println("Jesus");
+    // Turn left!!
+    if(ul_Echo_Time < 480)
+        {
+          servo_LeftMotor.writeMicroseconds(1820);
+          servo_RightMotor.writeMicroseconds(1700);
+          if(x == 1){
+          servo_LeftMotor.writeMicroseconds(1750);
+          servo_RightMotor.writeMicroseconds(1750);
+          delay(2200);
+          servo_LeftMotor.writeMicroseconds(2000);
+          servo_RightMotor.writeMicroseconds(1500);
+         delay(4000);
+          servo_LeftMotor.writeMicroseconds(1900);
+          servo_RightMotor.writeMicroseconds(1873);
+          delay(4000);
+          x = 0;
+          robotindex = 0;
+            
+          }
+        }
+        
+        else if(ul_Echo_Time > 520)
+        {
+          servo_LeftMotor.writeMicroseconds(1750);
+          servo_RightMotor.writeMicroseconds(1750);
+        }
+        
+        if(ul_Echo_Time > 750){
+         //Serial.println("Jesus");
+         x = 1;        
+        }
+        
+          
+           break;   
+        }
+    
 
-}
+  }
+      }
+
 void Indicator()
 {
   //display routine, if true turn on led
@@ -451,11 +505,3 @@ void Ping()
             
           }
 }
-   
-  
-
-
-
-
-
-
